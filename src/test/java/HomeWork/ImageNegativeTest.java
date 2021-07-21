@@ -1,40 +1,94 @@
 package HomeWork;
 
-import org.apache.commons.lang3.ObjectUtils;
+import HomeworkMain.ImageFormat;
+import HomeworkMain.ImageSize;
+import HomeworkMain.ImageWeight;
+import HomeworkMain.dto.PostImageResponse;
+import io.restassured.builder.MultiPartSpecBuilder;
+import io.restassured.specification.MultiPartSpecification;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
 
+import static HomeworkMain.EndPoints.DELETE_HASH;
+import static HomeworkMain.EndPoints.UPLOAD_IMAGE;
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.is;
 
 public class ImageNegativeTest extends BaseTest{
+    String uploadedImageId;
+    MultiPartSpecification multiPartImageOverSize;
+    MultiPartSpecification multiPartImageFormatTxt;
+    MultiPartSpecification multiPartImageSizeSmall;
+
+    @BeforeEach
+    void beforeTest(){
+        multiPartImageOverSize = new MultiPartSpecBuilder(new File(ImageWeight.OVERSIZE.getTitle()))
+                .controlName("image")
+                .build();
+
+        multiPartImageFormatTxt = new MultiPartSpecBuilder(new File(ImageFormat.TXT.getTitle()))
+                .controlName("image")
+                .build();
+
+        multiPartImageSizeSmall = new MultiPartSpecBuilder(new File(ImageSize.SMALL.getTitle()))
+                .controlName("image")
+                .build();
+    }
 
     @Test
     void uploadOversizeImageTest() {
-        given()
-                .headers("Authorization", token)
-                .multiPart("image", new File(ImageWeight.OVERSIZE.getTitle()))
-                .expect()
-                .statusCode(417)
-                .body("success", is(false))
-                .body("data.error", is("Internal expectation failed"))
-                .when()
-                .post("https://api.imgur.com/3/upload")
-                .prettyPeek();
+        given(requestSpecificationWithToken)
+                .multiPart(multiPartImageOverSize)
+                .post(UPLOAD_IMAGE)
+                .prettyPeek()
+                .then()
+                .spec(responseSpecificationImageOverSize);
     }
 
     @Test
     void uploadTxtImageTest() {
-        given()
-                .headers("Authorization", token)
-                .multiPart("image", new File(ImageFormat.TXT.getTitle()))
-                .expect()
-                .statusCode(400)
-                .body("success", is(false))
-                .body("data.error", is("We don't support that file type!"))
+        given(requestSpecificationWithToken)
+                .multiPart(multiPartImageFormatTxt)
+                .post(UPLOAD_IMAGE)
+                .prettyPeek()
+                .then()
+                .spec(responseSpecificationImageFormatTxt);
+    }
+
+    @Test
+    void uploadImageNull() {
+        given(requestSpecificationWithToken)
+                .post(UPLOAD_IMAGE)
+                .prettyPeek()
+                .then()
+                .spec(responseSpecificationImageNull);
+    }
+
+    @Test
+    void uploadImageWithoutToken() {
+        uploadedImageId = given()
+                .multiPart(multiPartImageSizeSmall)
+                .post(UPLOAD_IMAGE)
+                .prettyPeek()
+                .then()
+                .spec(responseSpecificationWithoutToken)
+                .extract()
+                .body()
+                .as(PostImageResponse.class)
+                .getData()
+                .getDeletehash();
+
+
+        tearDown();
+    }
+
+    void tearDown() {
+        given(requestSpecificationWithToken)
                 .when()
-                .post("https://api.imgur.com/3/upload")
-                .prettyPeek();
+                .delete(DELETE_HASH, username, uploadedImageId)
+                .prettyPeek()
+                .then()
+                .statusCode(200);
     }
 }

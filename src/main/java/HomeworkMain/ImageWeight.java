@@ -1,4 +1,4 @@
-package HomeWork;
+package HomeworkMain;
 
 public enum ImageWeight {
     MIDDLE("src/test/resources/500kb.jpg"),

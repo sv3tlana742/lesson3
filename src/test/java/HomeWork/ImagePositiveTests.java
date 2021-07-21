@@ -1,293 +1,284 @@
 package HomeWork;
 
-import org.apache.commons.io.FileUtils;
+import HomeworkMain.ImageFormat;
+import HomeworkMain.ImageSize;
+import HomeworkMain.ImageWeight;
+import HomeworkMain.VideoFormat;
+import HomeworkMain.dto.PostImageResponse;
+import io.restassured.builder.MultiPartSpecBuilder;
+import io.restassured.specification.MultiPartSpecification;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.Base64;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
+import static HomeworkMain.EndPoints.*;
+import static io.restassured.RestAssured.*;
 
 public class ImagePositiveTests extends BaseTest {
-    static String encodedFile;
-    String uploadedImageId;
+    static String uploadedImageDeleteHash;
+    MultiPartSpecification multiPartImageSizeSmall;
+    MultiPartSpecification multiPartImageWeightMiddle;
+    MultiPartSpecification multiPartImageWeightBig;
+    MultiPartSpecification multiPartImageWeightMaxSize;
+    MultiPartSpecification multiPartImageSizeMedium;
+    MultiPartSpecification multiPartImageSizeHd;
+    MultiPartSpecification multiPartImageFormatJpg;
+    MultiPartSpecification multiPartImageFormatPng;
+    MultiPartSpecification multiPartImageFormatGif;
+    MultiPartSpecification multiPartImageFormatTiff;
+    MultiPartSpecification multiPartImageFormatMp4;
 
-//    @BeforeEach
-//    void beforeTest() {
-//        byte[] byteArray = getFileContent();
-//        encodedFile = Base64.getEncoder().encodeToString(byteArray);
-//    }
-//
-//    @Test
-//    void uploadFileTest() {
-//        uploadedImageId = given()
-//                .headers("Authorization", token)
-//                .multiPart("image", encodedFile)
-//                .expect()
-//                .body("success", is(true))
-//                .body("data.id", is(notNullValue()))
-//                .when()
-//                .post("https://api.imgur.com/3/upload")
-//                .prettyPeek()
-//                .then()
-//                .extract()
-//                .response()
-//                .jsonPath()
-//                .getString("data.deletehash");
-//    }
+    @BeforeEach
+    void beforeTest() {
+        multiPartImageSizeSmall = new MultiPartSpecBuilder(new File(ImageSize.SMALL.getTitle()))
+                .controlName("image")
+                .build();
+        multiPartImageWeightMiddle = new MultiPartSpecBuilder(new File(ImageWeight.MIDDLE.getTitle()))
+                .controlName("image")
+                .build();
+        multiPartImageWeightBig = new MultiPartSpecBuilder(new File(ImageWeight.BIG.getTitle()))
+                .controlName("image")
+                .build();
+        multiPartImageWeightMaxSize = new MultiPartSpecBuilder(new File(ImageWeight.MAX_SIZE.getTitle()))
+                .controlName("image")
+                .build();
+        multiPartImageSizeMedium = new MultiPartSpecBuilder(new File(ImageSize.MEDIUM.getTitle()))
+                .controlName("image")
+                .build();
+        multiPartImageSizeHd = new MultiPartSpecBuilder(new File(ImageSize.HD.getTitle()))
+                .controlName("image")
+                .build();
+        multiPartImageFormatJpg = new MultiPartSpecBuilder(new File(ImageFormat.JPG.getTitle()))
+                .controlName("image")
+                .build();
+        multiPartImageFormatPng = new MultiPartSpecBuilder(new File(ImageFormat.PNG.getTitle()))
+                .controlName("image")
+                .build();
+        multiPartImageFormatGif = new MultiPartSpecBuilder(new File(ImageFormat.GIF.getTitle()))
+                .controlName("image")
+                .build();
+        multiPartImageFormatTiff = new MultiPartSpecBuilder(new File(ImageFormat.TIFF.getTitle()))
+                .controlName("image")
+                .build();
+        multiPartImageFormatMp4 = new MultiPartSpecBuilder(new File(VideoFormat.MP4.getTitle()))
+                .controlName("image")
+                .build();
+    }
 
     @Test
     void uploadMiddleImageTest() {
-        uploadedImageId = given()
-                .headers("Authorization", token)
-                .multiPart("image", new File(ImageWeight.MIDDLE.getTitle()))
-                .expect()
-                .statusCode(200)
-                .body("success", is(true))
-                .body("data.account_url",equalTo(username))
-                .body("data.account_id",equalTo(145270851))
+        uploadedImageDeleteHash = given(requestSpecificationWithToken)
+                .multiPart(multiPartImageWeightMiddle)
                 .when()
-                .post("https://api.imgur.com/3/upload")
+                .post(UPLOAD_IMAGE)
                 .prettyPeek()
                 .then()
+                .spec(allPositiveResponseSpecification)
                 .extract()
-                .response()
-                .jsonPath()
-                .getString("data.deletehash");
+                .body()
+                .as(PostImageResponse.class)
+                .getData()
+                .getDeletehash();
     }
 
     @Test
     void uploadBigImageTest() {
-        uploadedImageId = given()
-                .headers("Authorization", token)
-                .multiPart("image", new File(ImageWeight.BIG.getTitle()))
-                .expect()
-                .statusCode(200)
-                .body("success", is(true))
-                .body("data.account_url",equalTo(username))
-                .body("data.account_id",equalTo(145270851))
+        uploadedImageDeleteHash = given(requestSpecificationWithToken)
+                .multiPart(multiPartImageWeightBig)
                 .when()
-                .post("https://api.imgur.com/3/upload")
+                .post(UPLOAD_IMAGE)
                 .prettyPeek()
                 .then()
+                .spec(allPositiveResponseSpecification)
                 .extract()
-                .response()
-                .jsonPath()
-                .getString("data.deletehash");
+                .body()
+                .as(PostImageResponse.class)
+                .getData()
+                .getDeletehash();
     }
 
     @Test
     void uploadMaxImageTest() {
-        given()
-                .headers("Authorization", token)
-                .multiPart("image", new File(ImageWeight.MAX_SIZE.getTitle()))
-                .expect()
-                .statusCode(200)
-                .body("success", is(true))
-                .body("data.account_url",equalTo(username))
-                .body("data.account_id",equalTo(145270851))
+        uploadedImageDeleteHash = given(requestSpecificationWithToken)
+                .multiPart(multiPartImageWeightMaxSize)
                 .when()
-                .post("https://api.imgur.com/3/upload")
+                .post(UPLOAD_IMAGE)
                 .prettyPeek()
                 .then()
+                .spec(allPositiveResponseSpecification)
                 .extract()
-                .response()
-                .jsonPath()
-                .getString("data.deletehash");
+                .body()
+                .as(PostImageResponse.class)
+                .getData()
+                .getDeletehash();
     }
 
     @Test
     void uploadSmallImageTest() {
-        uploadedImageId = given()
-                .headers("Authorization", token)
-                .multiPart("image", new File(ImageSize.SMALL.getTitle()))
-                .expect()
-                .statusCode(200)
-                .body("success", is(true))
-                .body("data.account_url",equalTo(username))
-                .body("data.account_id",equalTo(145270851))
-                .body("data.width",equalTo(1))
-                .body("data.height",equalTo(1))
-                .when()
-                .post("https://api.imgur.com/3/upload")
+        uploadedImageDeleteHash = given(requestSpecificationWithToken)
+                .multiPart(multiPartImageSizeSmall)
+                .post(UPLOAD_IMAGE)
                 .prettyPeek()
                 .then()
+                .spec(allPositiveResponseSpecification)
+                .spec(responseSpecificationSmallImage)
                 .extract()
-                .response()
-                .jsonPath()
-                .getString("data.deletehash");
+                .body()
+                .as(PostImageResponse.class)
+                .getData()
+                .getDeletehash();
     }
 
     @Test
     void uploadMediumImageTest() {
-        uploadedImageId = given()
-                .headers("Authorization", token)
-                .multiPart("image", new File(ImageSize.MEDIUM.getTitle()))
-                .expect()
-                .statusCode(200)
-                .body("success", is(true))
-                .body("data.account_url",equalTo(username))
-                .body("data.account_id",equalTo(145270851))
-                .body("data.width",equalTo(1200))
-                .when()
-                .post("https://api.imgur.com/3/upload")
+        uploadedImageDeleteHash = given(requestSpecificationWithToken)
+                .multiPart(multiPartImageSizeMedium)
+                .post(UPLOAD_IMAGE)
                 .prettyPeek()
                 .then()
+                .spec(allPositiveResponseSpecification)
+                .spec(responseSpecificationMediumImage)
                 .extract()
-                .response()
-                .jsonPath()
-                .getString("data.deletehash");
+                .body()
+                .as(PostImageResponse.class)
+                .getData()
+                .getDeletehash();
     }
     @Test
     void uploadHDImageTest() {
-        uploadedImageId = given()
-                .headers("Authorization", token)
-                .multiPart("image", new File(ImageSize.HD.getTitle()))
-                .expect()
-                .statusCode(200)
-                .body("success", is(true))
-                .body("data.account_url",equalTo(username))
-                .body("data.account_id",equalTo(145270851))
-                .body("data.width",equalTo(10000))
-                .when()
-                .post("https://api.imgur.com/3/upload")
+        uploadedImageDeleteHash = given(requestSpecificationWithToken)
+                .multiPart(multiPartImageSizeHd)
+                .post(UPLOAD_IMAGE)
                 .prettyPeek()
                 .then()
+                .spec(allPositiveResponseSpecification)
+                .spec(responseSpecificationHdImage)
                 .extract()
-                .response()
-                .jsonPath()
-                .getString("data.deletehash");
+                .body()
+                .as(PostImageResponse.class)
+                .getData()
+                .getDeletehash();
     }
 
     @Test
     void uploadJpgImageTest() {
-        uploadedImageId = given()
-                .headers("Authorization", token)
-                .multiPart("image", new File(ImageFormat.JPG.getTitle()))
-                .expect()
-                .statusCode(200)
-                .body("success", is(true))
-                .body("data.account_url",equalTo(username))
-                .body("data.account_id",equalTo(145270851))
-                .body("data.type",equalTo("image/jpeg"))
-                .when()
-                .post("https://api.imgur.com/3/upload")
+        uploadedImageDeleteHash = given(requestSpecificationWithToken)
+                .multiPart(multiPartImageFormatJpg)
+                .post(UPLOAD_IMAGE)
                 .prettyPeek()
                 .then()
+                .spec(allPositiveResponseSpecification)
+                .spec(responseSpecificationImageFormatJpg)
                 .extract()
-                .response()
-                .jsonPath()
-                .getString("data.deletehash");
+                .body()
+                .as(PostImageResponse.class)
+                .getData()
+                .getDeletehash();
     }
 
     @Test
-    void uploadJngImageTest() {
-        uploadedImageId = given()
-                .headers("Authorization", token)
-                .multiPart("image", new File(ImageFormat.PNG.getTitle()))
-                .expect()
-                .statusCode(200)
-                .body("success", is(true))
-                .body("data.account_url",equalTo(username))
-                .body("data.account_id",equalTo(145270851))
-                .body("data.type",equalTo("image/png"))
-                .when()
-                .post("https://api.imgur.com/3/upload")
+    void uploadPngImageTest() {
+        uploadedImageDeleteHash = given(requestSpecificationWithToken)
+                .multiPart(multiPartImageFormatPng)
+                .post(UPLOAD_IMAGE)
                 .prettyPeek()
                 .then()
+                .spec(allPositiveResponseSpecification)
+                .spec(responseSpecificationImageFormatPng)
                 .extract()
-                .response()
-                .jsonPath()
-                .getString("data.deletehash");
+                .body()
+                .as(PostImageResponse.class)
+                .getData()
+                .getDeletehash();
     }
 
     @Test
     void uploadTiffImageTest() {
-        uploadedImageId = given()
-                .headers("Authorization", token)
-                .multiPart("image", new File(ImageFormat.GIF.getTitle()))
-                .expect()
-                .statusCode(200)
-                .body("success", is(true))
-                .body("data.account_url",equalTo(username))
-                .body("data.account_id",equalTo(145270851))
-                .body("data.type",equalTo("image/gif"))
-                .when()
-                .post("https://api.imgur.com/3/upload")
+        uploadedImageDeleteHash = given(requestSpecificationWithToken)
+                .multiPart(multiPartImageFormatTiff)
+                .post(UPLOAD_IMAGE)
                 .prettyPeek()
                 .then()
+                .spec(allPositiveResponseSpecification)
+                .spec(responseSpecificationImageFormatTiff)
                 .extract()
-                .response()
-                .jsonPath()
-                .getString("data.deletehash");
+                .body()
+                .as(PostImageResponse.class)
+                .getData()
+                .getDeletehash();
     }
 
     @Test
     void uploadGifImageTest() {
-        uploadedImageId = given()
-                .headers("Authorization", token)
-                .multiPart("image", new File(ImageFormat.TIFF.getTitle()))
-                .expect()
-                .statusCode(200)
-                .body("success", is(true))
-                .body("data.account_url",equalTo(username))
-                .body("data.account_id",equalTo(145270851))
-                .body("data.type",equalTo("image/jpeg"))
-                .when()
-                .post("https://api.imgur.com/3/upload")
+        uploadedImageDeleteHash = given(requestSpecificationWithToken)
+                .multiPart(multiPartImageFormatGif)
+                .post(UPLOAD_IMAGE)
                 .prettyPeek()
                 .then()
+                .spec(allPositiveResponseSpecification)
+                .spec(responseSpecificationImageFormatGif)
                 .extract()
-                .response()
-                .jsonPath()
-                .getString("data.deletehash");
+                .body()
+                .as(PostImageResponse.class)
+                .getData()
+                .getDeletehash();
     }
 
     @Test
     void uploadNotImageTest() {
-        uploadedImageId = given()
-                .headers("Authorization", token)
-                .multiPart("image", new File(ImageFormat.MP4_IMAGE.getTitle()))
-                .expect()
-                .statusCode(200)
-                .body("success", is(true))
-                .body("data.account_url",equalTo(username))
-                .body("data.account_id",equalTo(145270851))
-                .body("data.type",equalTo("video/mp4"))
-                .body("data.mp4",notNullValue())
-                .body("data.mp4_size",notNullValue())
-                .when()
-                .post("https://api.imgur.com/3/upload")
+        uploadedImageDeleteHash = given(requestSpecificationWithToken)
+                .multiPart(multiPartImageFormatMp4)
+                .post(UPLOAD_IMAGE)
                 .prettyPeek()
                 .then()
+                .spec(allPositiveResponseSpecification)
+                .spec(responseSpecificationVideoFormatMp4)
                 .extract()
-                .response()
-                .jsonPath()
-                .getString("data.deletehash");
+                .body()
+                .as(PostImageResponse.class)
+                .getData()
+                .getDeletehash();
+    }
+
+    @Test
+    void uploadImageWithoutToken() {
+        uploadedImageDeleteHash = given()
+                .multiPart(multiPartImageSizeSmall)
+                .post(UPLOAD_IMAGE)
+                .prettyPeek()
+                .then()
+                .spec(responseSpecificationWithoutToken)
+                .extract()
+                .body()
+                .as(PostImageResponse.class)
+                .getData()
+                .getDeletehash();
+    }
+
+    @Test
+    void uploadClientIdTest() {
+        uploadedImageDeleteHash = given(requestSpecificationWithClientId)
+                .multiPart(multiPartImageSizeSmall)
+                .post(UPLOAD_IMAGE)
+                .prettyPeek()
+                .then()
+                .spec(ResponseSpecificationWithClientId)
+                .spec(responseSpecificationSmallImage)
+                .extract()
+                .body()
+                .as(PostImageResponse.class)
+                .getData()
+                .getDeletehash();
     }
 
     @AfterEach
     void tearDown() {
-        given()
-                .headers("Authorization", token)
-                .when()
-                .delete("https://api.imgur.com/3/account/{username}/image/{deleteHash}", username, uploadedImageId)
-                .prettyPeek()
+        given(requestSpecificationWithToken)
+                .delete(DELETE_HASH, uploadedImageDeleteHash)
+//                .prettyPeek()
                 .then()
                 .statusCode(200);
     }
-
-//    private byte[] getFileContent() {
-//        byte[] byteArray = new byte[0];
-//        try {
-//            byteArray = FileUtils.readFileToByteArray(new File(ImageWeight.MIDDLE.getTitle()));
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//        return byteArray;
-//    }
 }
